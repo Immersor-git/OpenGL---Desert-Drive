@@ -6,15 +6,17 @@
 #include "ShaderProgram.h"
 #include "Object3D.h"
 #include "Animator.h"
+#include "DynamicLight.h"
 
 class Scene {
 public:
     ShaderProgram defaultShader;
     std::vector<Object3D> objects;
     std::vector<Animator> animators;
+    std::vector<DynamicLight> lights;
 
-    Scene(ShaderProgram &&defaultShader, std::vector<Object3D> &&objects, std::vector<Animator> &&animators)
-        : defaultShader(defaultShader), objects(std::move(objects)), animators(std::move(animators)) {}
+    Scene(ShaderProgram &&defaultShader, std::vector<Object3D> &&objects, std::vector<Animator> &&animators, std::vector<DynamicLight> &&lights)
+        : defaultShader(defaultShader), objects(std::move(objects)), animators(std::move(animators)), lights(std::move(lights)) {}
     Scene(ShaderProgram &&shader, const Object3D& object)
         : defaultShader(shader), objects(std::vector<Object3D>{object}) {}
 

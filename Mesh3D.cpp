@@ -7,6 +7,30 @@ using sf::Vector2u;
 using glm::mat4;
 using glm::vec4;
 
+glm::vec3 calculateTangent(const glm::vec3& normal1, const glm::vec3& normal2, const glm::vec3& normal3,
+                           const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3) {
+    // Calculate the two vectors for this face
+    glm::vec3 edge1 = normal2 - normal1;
+    glm::vec3 edge2 = normal3 - normal1;
+
+    // Calculate the two texture coordinate vectors for this face
+    glm::vec2 deltaUV1 = uv2 - uv1;
+    glm::vec2 deltaUV2 = uv3 - uv1;
+
+    // Calculate the reciprocal of the determinant of the matrix of the above vectors
+    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+    // Use the reciprocal and the vectors to calculate the tangent
+    glm::vec3 tangent;
+    tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+    tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+    tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+    tangent = glm::normalize(tangent);
+
+    return tangent;
+}
+//
+
 Mesh3D::Mesh3D(std::vector<Vertex3D>&& vertices, std::vector<uint32_t>&& faces,
 	Texture texture) 
 	: Mesh3D(std::move(vertices), std::move(faces), std::vector<Texture>{texture}) {
@@ -14,7 +38,34 @@ Mesh3D::Mesh3D(std::vector<Vertex3D>&& vertices, std::vector<uint32_t>&& faces,
 
 Mesh3D::Mesh3D(std::vector<Vertex3D>&& vertices, std::vector<uint32_t>&& faces, std::vector<Texture>&& textures)
  : m_vertexCount(vertices.size()), m_faceCount(faces.size()), m_textures(textures) {
+   /*
+    for (int fId = 0; fId < m_faceCount-2; fId+=3) {
+        u_int f1 = faces[fId];
+        u_int f2 = faces[fId+1];
+        u_int f3 = faces[fId+2];
 
+        glm::vec3 norm1 = glm::vec3(vertices[f1].nx, vertices[f1].ny, vertices[f1].nz);
+        glm::vec3 norm2 = glm::vec3(vertices[f2].nx, vertices[f2].ny, vertices[f2].nz);
+        glm::vec3 norm3 = glm::vec3(vertices[f3].nx, vertices[f3].ny, vertices[f3].nz);
+
+        glm::vec2 uv1 = glm::vec2(vertices[f1].u, vertices[f1].v);
+        glm::vec2 uv2 = glm::vec2(vertices[f2].u, vertices[f2].v);
+        glm::vec2 uv3 = glm::vec2(vertices[f3].u, vertices[f3].v);
+
+        glm::vec3 tangent = calculateTangent(norm1, norm2, norm3, uv1, uv2, uv3);
+        Vertex3D vertice1 = vertices[f1];
+        Vertex3D vertice2 = vertices[f2];
+        Vertex3D vertice3 = vertices[f3];
+
+        //vertice1.setTangent(tangent);
+        //vertice2.setTangent(tangent);
+        //vertice3.setTangent(tangent);
+
+        //vertices[f1] = std::move(vertice1);
+        //vertices[f2] = std::move(vertice2);
+        //vertices[f3] = std::move(vertice3);
+    }
+    */
 	// Generate a vertex array object on the GPU.
 	glGenVertexArrays(1, &m_vao);
 	// "Bind" the newly-generated vao, which makes future functions operate on that specific object.
@@ -51,6 +102,8 @@ Mesh3D::Mesh3D(std::vector<Vertex3D>&& vertices, std::vector<uint32_t>&& faces, 
 
 	// Unbind the vertex array, so no one else can accidentally mess with it.
 	glBindVertexArray(0);
+// Render commands will no longer render to the screen.
+
 }
 
 void Mesh3D::addTexture(Texture texture)
@@ -61,12 +114,15 @@ void Mesh3D::addTexture(Texture texture)
 void Mesh3D::render(sf::Window& window, ShaderProgram& program) const {
 	// Activate the mesh's vertex array.
 	glBindVertexArray(m_vao);
+    bool hasHeightmap = false;
 	for (auto i = 0; i < m_textures.size(); i++) {
-		program.setUniform(m_textures[i].samplerName, i);
-		glActiveTexture(GL_TEXTURE0 + i);
+		program.setUniform(m_textures[i].samplerName, i + 4);
+        if (m_textures[i].samplerName == "heightMap") hasHeightmap = true;
+		glActiveTexture(GL_TEXTURE4 + i);
 		glBindTexture(GL_TEXTURE_2D, m_textures[i].textureId);
 	}
-
+    //if (hasHeightmap) std::cout<<"Heightmap render \n";
+    program.setUniform("hasHeightmap", hasHeightmap);
 	// Draw the vertex array, using its "element buffer" to identify the faces.
 	glDrawElements(GL_TRIANGLES, m_faceCount, GL_UNSIGNED_INT, nullptr);
 	// Deactivate the mesh's vertex array and texture.
@@ -77,14 +133,14 @@ void Mesh3D::render(sf::Window& window, ShaderProgram& program) const {
 Mesh3D Mesh3D::square(const std::vector<Texture> &textures) {
 	return Mesh3D(
 		{ 
-		  { 0.5, 0.5, 0, 0, 0, 1, 1, 0 },    // TR
-		  { 0.5, -0.5, 0, 0, 0, 1, 1, 1 },   // BR
-		  { -0.5, -0.5, 0, 0, 0, 1, 0, 1 },  // BL
-		  { -0.5, 0.5, 0, 0, 0, 1, 0, 0 },   // TL
+		  { 0.5, 0.5, 0, 0, 0, -1, 1, 0 },    // TR
+		  { 0.5, -0.5, 0, 0, 0, -1, 1, 1 },   // BR
+		  { -0.5, -0.5, 0, 0, 0, -1, 0, 1 },  // BL
+		  { -0.5, 0.5, 0, 0, 0, -1, 0, 0 },   // TL
 		}, 
 		{ 
-			2, 1, 3,
-			3, 1, 0,
+			3, 1, 2,
+			0, 1, 3,
 		},
 		std::vector<Texture>(textures)
 	);

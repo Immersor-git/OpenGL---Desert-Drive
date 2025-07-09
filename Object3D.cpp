@@ -49,6 +49,10 @@ const std::string& Object3D::getName() const {
 	return m_name;
 }
 
+const Mesh3D& Object3D::getMesh(size_t index) const {
+    return m_meshes[index];
+}
+
 size_t Object3D::numberOfChildren() const {
 	return m_children.size();
 }

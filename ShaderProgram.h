@@ -1,10 +1,12 @@
 #pragma once
 #include <glm/ext.hpp>
 #include <string>
+#include <SFML/Window.hpp>
+
 class ShaderProgram {
-	uint32_t m_programId;
 
 public:
+    uint32_t m_programId;
 	ShaderProgram();
 	void load(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
 
@@ -22,4 +24,18 @@ public:
 
     static ShaderProgram phongLighting();
     static ShaderProgram textureMapping();
+
+    void RenderShadowMap(sf::Window &window);
+
+    void ShadowMapComplete();
+
+    void EnableShadowMap(sf::Window &window);
+
+    void EnableShadowMap();
+
+    void setUniform(const std::string &uniformName, uint32_t value);
+
+    void RenderShadowMap();
+
+    static ShaderProgram skyShading();
 };

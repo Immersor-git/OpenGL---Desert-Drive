@@ -20,9 +20,10 @@ StbImage::~StbImage()
 
 void StbImage::loadFromFile(const std::string& filepath)
 {
+    std::cout<<"Loading: "<<filepath.c_str()<<" \n";
     data = stbi_load(filepath.c_str(), &width, &height, &bpp, 4);
     if (data == nullptr)
-        std::cerr << "Failed to load image!\n";
+        std::cerr << "Failed to load image!\n" << filepath << std::endl;
 }
 
 int StbImage::getWidth() const { return width; }

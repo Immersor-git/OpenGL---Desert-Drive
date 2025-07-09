@@ -44,6 +44,8 @@ public:
 	const glm::vec3& getCenter() const;
 	const std::string& getName() const;
 
+    const Mesh3D& getMesh(size_t index) const;
+
 	// Child management.
 	size_t numberOfChildren() const;
 	const Object3D& getChild(size_t index) const;

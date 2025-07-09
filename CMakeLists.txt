@@ -13,6 +13,15 @@ add_executable(mattsquared_graphics
         StbImage.cpp
         Animator.cpp
         Scene.cpp
+        DynamicLight.cpp
+        DynamicLight.h
+        UserInput.cpp
+        UserInput.h
+        Vehicle.cpp
+        Vehicle.h
+        SkyShading.cpp
+        SkyShading.h
+        BezierAnimation.h
 )
 
 find_package(SFML COMPONENTS system window REQUIRED)

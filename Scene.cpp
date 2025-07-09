@@ -2,25 +2,151 @@
 #include "AssimpImport.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
-
+#include "BezierAnimation.h"
 
 
 Scene Scene::jeep() {
-    auto jeep = assimpLoad("../models/mil_jeep_fbx/mil_jeep.fbx", true);
-    jeep.move(glm::vec3(0, -1.2, 0));
+    auto jeep = assimpLoad("../models/mil_jeep_fbx/chassis.fbx", true);
+
+    jeep.addChild(assimpLoad("../models/mil_jeep_fbx/b_l_tire_centered.fbx", true));
+    jeep.addChild(assimpLoad("../models/mil_jeep_fbx/b_r_tire_centered.fbx", true));
+    jeep.addChild(assimpLoad("../models/mil_jeep_fbx/f_l_tire_centered.fbx", true));
+    jeep.addChild(assimpLoad("../models/mil_jeep_fbx/f_r_tire_centered.fbx", true));
+
+    jeep.getChild(2).move(glm::vec3(-295.31, 166.564, -142.697));
+    jeep.getChild(3).move(glm::vec3(-295.31, 166.564, 142.697));
+    jeep.getChild(4).move(glm::vec3(329.379, 170.609, -142.697));
+    jeep.getChild(5).move(glm::vec3(329.379, 170.609, 142.697));
+
+    jeep.move(glm::vec3(0, -1.25, 0));
     jeep.grow(glm::vec3(0.004, 0.004, 0.004));
+
+    auto cactus = assimpLoad("../models/desert/Cactus.fbx", true);
+    auto cactusMesh = cactus.getChild(0).getMesh(0);
+    cactusMesh.addTexture(Texture::loadTexture("../models/desert/textures/tex_cactus01.png", "baseTexture"));
+    cactus.move(glm::vec3(0, -0.5, 5));
+    cactus.grow(glm::vec3(0.01, 0.01, 0.01));
+
+    auto bird = assimpLoad("../models/bird/duck.fbx", true);
+    bird.grow(glm::vec3(0.01, 0.01, 0.01));
+
+    std::vector<Texture> groundtex = {Texture::loadTexture("../models/concrete.png","baseTexture"),Texture::loadTexture("../models/test_specular.jpg","specMap")};
+    //std::vector<Mesh3D> ground = {Mesh3D::square(groundtex)};
+    Object3D map = Object3D({Mesh3D::square(groundtex)});//assimpLoad("../models/racetrack/arena.obj", true);
+    map.grow(glm::vec3(100,100,100));
+    map.move(glm::vec3(0,-1,0));
+    map.rotate(glm::vec3(glm::radians(-90.0f),0,0));
+
+    std::vector<Texture> walltex = {Texture::loadTexture("../models/wall.jpg","baseTexture")};
+
+    Object3D map2 = Object3D({Mesh3D::square(walltex)});//assimpLoad("../models/racetrack/arena.obj", true);
+    map2.grow(glm::vec3(100,15,10));
+    map2.move(glm::vec3(0,-1.2,50));
+    map.rotate(glm::vec3(0,glm::radians(180.0),0));
+    //map.rotate(glm::vec3(glm::radians(-90.0f),0,0));
+    auto lightSource = assimpLoad("../models/tiger/scene.gltf", true);
+    lightSource.setPosition(glm::vec3(-2,1,0));
+    lightSource.grow(glm::vec3(0.01,0.01,0.01));
+
+
+    glm::mat4 dirLight = glm::mat4(
+            0,0 ,0,0, //Position (Direction for directional lights);
+            1,1,0.9,0, //Color
+            1,1,10,0, //LightType, Range, Cuttoff Angle (For spotlights)
+            0.5,-0.4,0,0 //LookAt (For spotlights and directionalLights)
+    );
+
+    /*glm::mat4 pointLight = glm::mat4(
+            -5,0,0,0, //Position
+            1,0,0,0, //Color
+            2,25,0,0, //LightType, Range, Cuttoff Angle (For spotlights)
+            0,0,0,0 //LookAt (For spotlights)
+    );
+
+    /glm::mat4 spotLight = glm::mat4(
+            1,0,5,0, //Position
+            1,1,0.5,0, //Color
+            3,70,45,0, //LightType, Range, Cuttoff Angle (For spotlights)
+            0,0,1,0 //LookAt (For spotlights)
+    );
+
+    glm::mat4 pointLight2 = glm::mat4(
+            5,0,0,0, //Position
+            0,1,0,0, //Color
+            2,25,0,0, //LightType, Range, Cuttoff Angle (For spotlights)
+            0,0,0,0 //LookAt (For spotlights)
+    )
+     */
 
     std::vector<Object3D> objects;
     objects.push_back(std::move(jeep));
-    Animator animJeep;
-    animJeep.addAnimation(std::make_unique<RotationAnimation>(objects[0], 10, glm::vec3(0, 5.5, 0)));
+    objects.push_back(std::move(lightSource));
+    objects.push_back(std::move(cactus));
+    objects.push_back(std::move(bird));
+    //objects.push_back(std::move(map));
+    //objects.push_back(std::move(map2));
+    std::vector<Texture> groundtex2 = {
+            Texture::loadTexture("../models/desert_pbr_textures/desert-rocks1-albedo.png","baseTexture"),
+            Texture::loadTexture("../models/desert_pbr_textures/desert-rocks1-Roughness.png","specMap"),
+            Texture::loadTexture("../models/desert_pbr_textures/desert-rocks1-Height.png","heightMap"),
+            Texture::loadTexture("../models/desert_pbr_textures/desert-rocks1-Normal-ogl.png","normalMap")};
+    for (int x = -5; x < 5; x++) {
+        for (int z = -5; z < 5; z++) {
+            //,
+            //int x = 0;
+            //int z = 0;
+                   //Texture::loadTexture("/Users/matthewhalderman/Downloads/mattsquared_graphics/models/desert_pbr_textures/desert-rocks1-Roughness.png","specMap")};
+            Object3D groundPanel = Object3D({Mesh3D::square(groundtex2)});//assimpLoad("../models/racetrack/arena.obj", true);
+            groundPanel.grow(glm::vec3(10,10,10));
+            groundPanel.move(glm::vec3(x*10,-1,z*10));
+            groundPanel.rotate(glm::vec3(glm::radians(90.0f),0,0));
+            objects.push_back(std::move(groundPanel));
+
+            auto cactus = assimpLoad("../models/desert/Cactus.fbx", true);
+            float randHeight = pow((rand()%10)/10.0,2) * 3.0;
+            cactus.move(glm::vec3(x*10 - 5 + rand()%10, -0.8 - randHeight*0.2, z*10 - 5 +rand()%10));
+            cactus.grow(glm::vec3(0.0075 + 0.005*randHeight, 0.01 + 0.01 * randHeight, 0.0075 + 0.005*randHeight));
+            objects.push_back(std::move(cactus));
+        }
+    }
+    std::vector<DynamicLight> lights;
+    lights.push_back(std::move(DynamicLight(dirLight)));
+    //lights.push_back(std::move(DynamicLight(pointLight)));
+    //lights.push_back(std::move(DynamicLight(spotLight)));
+    //lights.push_back(std::move(DynamicLight(pointLight2)));
+    //Animator animJeep;
+    //animJeep.addAnimation(std::make_unique<RotationAnimation>(objects[0], 10, glm::vec3(0, 5.5, 0)));
     std::vector<Animator> animators;
-    animators.push_back(std::move(animJeep));
+    //animators.push_back(std::move(animJeep));
+    Animator bezierBird;
+    std::vector<glm::vec3> controlPoints = {
+            glm::vec3(10, 0, 0),
+            glm::vec3(10, 2.7, 1.6),
+            glm::vec3(10, 0.2, 3.0),
+            glm::vec3(10, 0.7, 4.5),
+            glm::vec3(10, 0.1, 6.0),
+            glm::vec3(10, 3.2, 5.8),
+            glm::vec3(10, 3.2, 7.0),
+            glm::vec3(10, 0.8, 8.0), //
+            glm::vec3(10, 3.2, 7.0),
+            glm::vec3(10, 3.2, 5.8),
+            glm::vec3(10, 0.1, 6.0),
+            glm::vec3(10, 0.7, 4.5),
+            glm::vec3(10, 0.2, 3.0),
+            glm::vec3(10, 2.7, 1.6),
+            glm::vec3(10, 0, 0)
+    };
+    bezierBird.addAnimation(std::make_unique<BezierAnimation>(objects[3], 7, controlPoints));
+    bezierBird.addAnimation(std::make_unique<BezierAnimation>(objects[3], 7, controlPoints));
+    bezierBird.addAnimation(std::make_unique<BezierAnimation>(objects[3], 7, controlPoints));
+    bezierBird.addAnimation(std::make_unique<BezierAnimation>(objects[3], 7, controlPoints));
+    animators.push_back(std::move(bezierBird));
 
     return Scene {
             ShaderProgram::phongLighting(),
             std::move(objects),
-            std::move(animators)
+            std::move(animators),
+            std::move(lights)
     };
 }
 
@@ -62,7 +188,8 @@ Scene Scene::lifeOfPi() {
     return Scene {
             ShaderProgram::phongLighting(),
             std::move(objects),
-            std::move(animators)
+            std::move(animators),
+            {}
     };
 }
 

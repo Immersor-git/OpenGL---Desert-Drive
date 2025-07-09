@@ -10,6 +10,15 @@
 const size_t FLOATS_PER_VERTEX = 3;
 const size_t VERTICES_PER_FACE = 3;
 
+
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
 std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, const std::string& typeName, const std::filesystem::path& modelPath,
 	std::unordered_map<std::filesystem::path, Texture, PathHash>& loadedTextures) {
 	std::vector<Texture> textures;
@@ -21,7 +30,13 @@ std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, c
         std::replace(correctedPath.begin(), correctedPath.end(), '\\', '/');
 
         // Hardcoded fix for mil_jeep_fbx model
-        const std::string prefix = "../../../../AppData/Local";
+        const std::string prefix = "../../../../AppData/Local";//"/Users/matt/school/current-classes/CECS449/mattsquared-graphics/";//"../../../../AppData/Local";
+        //const std::string prefix2 = "../";
+        //const std::string blank = "/Users/matthewhalderman/Downloads/mattsquared_graphics/";
+        //std::string nameStr = name.C_Str();
+        //replace(nameStr, prefix, blank);
+        //replace(nameStr, prefix2, blank);
+        //std::cout<<nameStr<<std::endl;
         if (correctedPath.rfind(prefix, 0) == 0) {
             // Remove all preceding directories leading up to the file name
             std::filesystem::path p(correctedPath);
@@ -95,6 +110,26 @@ Mesh3D fromAssimpMesh(const aiMesh* mesh, const aiScene* scene, const std::files
 		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 	}
 
+    // DUCT TAPE the cactus texture onto the cactus model lol
+    if (modelPath.filename().string() == "Cactus.fbx") {
+        StbImage image;
+        std::filesystem::path texPath("../models/desert/textures/tex_cactus_01.png");
+        image.loadFromFile(texPath.string());
+        Texture tex = Texture::loadImage(image, "baseTexture");
+        textures.push_back(tex);
+        loadedTextures.insert(std::make_pair(texPath, tex));
+
+        //loadedTextures.insert(std::make_pair(texPath, texSpec));
+        /*std::vector<Texture> groundtex2 = {
+                //Texture::loadTexture("/Users/matthewhalderman/Downloads/mattsquared_graphics/models/desert_pbr_textures/desert-rocks1-albedo.png","baseTexture"),
+                Texture::loadTexture("/Users/matthewhalderman/Downloads/mattsquared_graphics/models/desert_pbr_textures/desert-rocks1-Roughness.png","specMap"),
+                Texture::loadTexture("/Users/matthewhalderman/Downloads/mattsquared_graphics/models/desert_pbr_textures/desert-rocks1-Height.png","heightMap"),
+                Texture::loadTexture("/Users/matthewhalderman/Downloads/mattsquared_graphics/models/desert_pbr_textures/desert-rocks1-Normal-ogl.png","normalMap")};
+        };
+        for (auto t : groundtex2) {
+            std::cout<<t.samplerName<<std::endl;
+        }*/
+    }
 	auto m = Mesh3D(std::move(vertices), std::move(faces), std::move(textures));
 	return m;
 }

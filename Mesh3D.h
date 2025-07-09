@@ -17,6 +17,17 @@ struct Vertex3D {
 	float_t u;
 	float_t v;
 
+    /*float_t tx;
+    float_t ty;
+    float_t tz;
+
+    void setTangent(glm::vec3 t) {
+        tx = t.x;
+        ty = t.y;
+        tz = t.z;
+    }
+     */
+
 	Vertex3D(float_t px, float_t py, float_t pz, float_t normX, float_t normY, float_t normZ,
 		float_t texU, float_t texV) :
 		x(px), y(py), z(pz), nx(normX), ny(normY), nz(normZ), u(texU), v(texV) {}
@@ -28,7 +39,12 @@ struct Vertex3D {
  */
 class Mesh3D {
 private:
-	uint32_t m_vao;
+    Mesh3D(std::vector<Vertex3D> &&vertices, std::vector<uint32_t> &&faces, Texture texture, int denotion);
+
+    Mesh3D(std::vector<Vertex3D> &&vertices, std::vector<uint32_t> &&faces, std::vector<Texture> textures,
+           int denotion);
+
+    uint32_t m_vao;
 	std::vector<Texture> m_textures;
 	size_t m_vertexCount;
 	size_t m_faceCount;
